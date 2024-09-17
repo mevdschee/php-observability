@@ -1,13 +1,13 @@
 <?php
 
 while (true) {
-  if (LMSObserver::logging()) {
-    LMSObserver::log("database_calls", "file.php@L123", 1 / 7);
+  if (Observer::logging()) {
+    Observer::log("database_calls", "file.php@L123", 1 / 7);
   }
   sleep(1);
 }
 
-class LMSObserver
+class Observer
 {
   private static ?Socket $socket = null;
   private static bool $connected = false;
