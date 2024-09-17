@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mevdschee/logreader/statistics"
+	"github.com/mevdschee/php-observability/statistics"
 )
 
 var stats = statistics.New()
