@@ -32,6 +32,7 @@ class LMSObserver
       $line = sprintf("%s:%s:%g", $name, $tag, $duration);
       if (!@socket_write(self::$socket, $line . "\n", strlen($line) + 1)) {
         self::$socket = null;
+        self::$connected = false;
       }
     }
   }
