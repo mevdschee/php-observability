@@ -11,7 +11,7 @@ import (
 	"github.com/mevdschee/php-observability/statistics"
 )
 
-var stats = statistics.New()
+var stats = statistics.New("file")
 
 func main() {
 	go serve()

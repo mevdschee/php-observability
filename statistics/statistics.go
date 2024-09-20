@@ -13,13 +13,15 @@ type StatisticSet struct {
 }
 
 type Statistics struct {
-	mutex sync.Mutex
-	names map[string]StatisticSet
+	mutex   sync.Mutex
+	tagName string
+	names   map[string]StatisticSet
 }
 
-func New() *Statistics {
+func New(tagName string) *Statistics {
 	s := Statistics{
-		names: map[string]StatisticSet{},
+		tagName: tagName,
+		names:   map[string]StatisticSet{},
 	}
 	return &s
 }
@@ -56,7 +58,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		sort.Strings(keys)
 		for _, k := range keys {
 			v := ss.counters[k]
-			(*writer).Write([]byte(name + "_count{tag=\"" + k + "\"} " + strconv.FormatUint(v, 10) + "\n"))
+			(*writer).Write([]byte(name + "_count{" + s.tagName + "=\"" + k + "\"} " + strconv.FormatUint(v, 10) + "\n"))
 		}
 		keys = []string{}
 		for key := range ss.durations {
@@ -65,7 +67,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		sort.Strings(keys)
 		for _, k := range keys {
 			v := ss.durations[k]
-			(*writer).Write([]byte(name + "_duration{tag=\"" + k + "\"} " + strconv.FormatFloat(v, 'f', 3, 64) + "\n"))
+			(*writer).Write([]byte(name + "_seconds{" + s.tagName + "=\"" + k + "\"} " + strconv.FormatFloat(v, 'f', 3, 64) + "\n"))
 		}
 	}
 }
