@@ -18,7 +18,7 @@ http://localhost:4000/
 
 Example stats:
 
-    database_calls_count{tag="file.php@L123"} 1000
-    database_calls_duration{tag="file.php@L123"} 142.857
+    database_calls_count{file="file.php@L123"} 1000
+    database_calls_seconds{file="file.php@L123"} 142.857
 
 Enjoy!
