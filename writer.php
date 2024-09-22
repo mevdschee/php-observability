@@ -11,6 +11,7 @@ class Observer
 {
   private static ?Socket $socket = null;
   private static bool $connected = false;
+  private static int $connectAt = 0;
 
   public static function logging(bool $connect = true): bool
   {
@@ -19,7 +20,9 @@ class Observer
       self::$connected = false;
     }
     if (!self::$connected) {
-      if ($connect) {
+      $now = time();
+      if ($connect && self::$connectAt != $now) {
+        self::$connectAt = $now;
         self::$connected = @socket_connect(self::$socket, 'localhost', '7777');
       }
     }
