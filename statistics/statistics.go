@@ -1,6 +1,7 @@
 package statistics
 
 import (
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -8,19 +9,35 @@ import (
 	"sync"
 )
 
+type Boundary struct {
+	name  string
+	value float64
+}
+
 type StatisticSet struct {
 	counters  map[string]uint64
 	durations map[string]float64
+	buckets   map[string]uint64
 }
 
 type Statistics struct {
-	mutex sync.Mutex
-	names map[string]StatisticSet
+	mutex      sync.Mutex
+	names      map[string]StatisticSet
+	boundaries []Boundary
 }
 
 func New() *Statistics {
 	s := Statistics{
 		names: map[string]StatisticSet{},
+		boundaries: []Boundary{
+			{"0.001", 0.001},
+			{"0.01", 0.01},
+			{"0.1", 0.1},
+			{"1", 1},
+			{"10", 10},
+			{"100", 100},
+			{"+Inf", math.MaxFloat64},
+		},
 	}
 	return &s
 }
@@ -34,11 +51,18 @@ func (s *Statistics) Add(name string, tagName string, tag string, val float64) {
 		ss = StatisticSet{
 			counters:  map[string]uint64{},
 			durations: map[string]float64{},
+			buckets:   map[string]uint64{},
 		}
 		s.names[key] = ss
 	}
 	ss.counters[tag]++
 	ss.durations[tag] += val
+	for _, b := range s.boundaries {
+		if b.value > val {
+			break
+		}
+		ss.buckets[b.name]++
+	}
 }
 
 func (s *Statistics) Write(writer *http.ResponseWriter) {
@@ -71,6 +95,10 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		for _, k := range keys {
 			v := ss.durations[k]
 			(*writer).Write([]byte(metricName + "_seconds{" + tagName + "=\"" + k + "\"} " + strconv.FormatFloat(v, 'f', 3, 64) + "\n"))
+		}
+		for _, b := range s.boundaries {
+			v := ss.buckets[b.name]
+			(*writer).Write([]byte(metricName + "_seconds_bucket{le=\"" + b.name + "\"} " + strconv.FormatUint(v, 10) + "\n"))
 		}
 	}
 }
