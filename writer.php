@@ -2,7 +2,7 @@
 
 while (true) {
   if (Observer::logging()) {
-    Observer::log("database_calls", "file.php@L123", 1 / 7);
+    Observer::log("database_calls", "file", "file.php@L123", 1 / 7);
   }
   sleep(1);
 }
@@ -26,10 +26,10 @@ class Observer
     return self::$connected;
   }
 
-  public static function log(string $name, string $tag, float $duration)
+  public static function log(string $name, string $tagName, string $tag, float $duration)
   {
     if (self::$connected) {
-      $line = sprintf("%s:%s:%g", $name, $tag, $duration);
+      $line = sprintf("%s:%s:%s:%g", $name, $tagName, $tag, $duration);
       if (!@socket_write(self::$socket, $line . "\n", strlen($line) + 1)) {
         self::$socket = null;
         self::$connected = false;

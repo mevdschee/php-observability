@@ -11,7 +11,7 @@ import (
 	"github.com/mevdschee/php-observability/statistics"
 )
 
-var stats = statistics.New("file")
+var stats = statistics.New()
 
 func main() {
 	go serve()
@@ -47,8 +47,8 @@ func handleConn(conn net.Conn) {
 	for scan.Scan() {
 		input := scan.Text()
 		fields := strings.Split(input, ":")
-		duration, _ := strconv.ParseFloat(fields[2], 64)
-		stats.Add(fields[0], fields[1], duration)
+		duration, _ := strconv.ParseFloat(fields[3], 64)
+		stats.Add(fields[0], fields[1], fields[2], duration)
 		log.Printf("received input: %v", fields)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -13,29 +14,28 @@ type StatisticSet struct {
 }
 
 type Statistics struct {
-	mutex   sync.Mutex
-	tagName string
-	names   map[string]StatisticSet
+	mutex sync.Mutex
+	names map[string]StatisticSet
 }
 
-func New(tagName string) *Statistics {
+func New() *Statistics {
 	s := Statistics{
-		tagName: tagName,
-		names:   map[string]StatisticSet{},
+		names: map[string]StatisticSet{},
 	}
 	return &s
 }
 
-func (s *Statistics) Add(name string, tag string, val float64) {
+func (s *Statistics) Add(name string, tagName string, tag string, val float64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	ss, exists := s.names[name]
+	key := name + "|" + tagName
+	ss, exists := s.names[key]
 	if !exists {
 		ss = StatisticSet{
 			counters:  map[string]uint64{},
 			durations: map[string]float64{},
 		}
-		s.names[name] = ss
+		s.names[key] = ss
 	}
 	ss.counters[tag]++
 	ss.durations[tag] += val
@@ -51,6 +51,9 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 	sort.Strings(names)
 	for _, name := range names {
 		ss := s.names[name]
+		parts := strings.SplitN(name, "|", 2)
+		metricName := parts[0]
+		tagName := parts[1]
 		var keys []string
 		for key := range ss.counters {
 			keys = append(keys, key)
@@ -58,7 +61,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		sort.Strings(keys)
 		for _, k := range keys {
 			v := ss.counters[k]
-			(*writer).Write([]byte(name + "_count{" + s.tagName + "=\"" + k + "\"} " + strconv.FormatUint(v, 10) + "\n"))
+			(*writer).Write([]byte(metricName + "_count{" + tagName + "=\"" + k + "\"} " + strconv.FormatUint(v, 10) + "\n"))
 		}
 		keys = []string{}
 		for key := range ss.durations {
@@ -67,7 +70,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		sort.Strings(keys)
 		for _, k := range keys {
 			v := ss.durations[k]
-			(*writer).Write([]byte(name + "_seconds{" + s.tagName + "=\"" + k + "\"} " + strconv.FormatFloat(v, 'f', 3, 64) + "\n"))
+			(*writer).Write([]byte(metricName + "_seconds{" + tagName + "=\"" + k + "\"} " + strconv.FormatFloat(v, 'f', 3, 64) + "\n"))
 		}
 	}
 }
