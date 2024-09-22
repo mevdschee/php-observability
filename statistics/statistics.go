@@ -104,7 +104,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 			v := ss.buckets[b.name]
 			(*writer).Write([]byte(metricName + "_seconds_bucket{le=\"" + b.name + "\"} " + strconv.FormatUint(v, 10) + "\n"))
 		}
+		(*writer).Write([]byte(metricName + "_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
 		(*writer).Write([]byte(metricName + "_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
-		(*writer).Write([]byte(metricName + "_seconds_total " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
 	}
 }
