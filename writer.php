@@ -4,7 +4,7 @@ while (true) {
   if (Observer::logging()) {
     Observer::log("database_calls", "file", "file.php@L123", 1 / 7);
   }
-  sleep(1);
+  usleep(100 * 1000);
 }
 
 class Observer
