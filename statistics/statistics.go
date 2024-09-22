@@ -80,7 +80,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		metricName := parts[0]
 		tagName := parts[1]
 		// counters
-		(*writer).Write([]byte("# HELP " + metricName + "_seconds A counter of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+		(*writer).Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
 		(*writer).Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
 		var keys []string
 		for key := range ss.counters {
