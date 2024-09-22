@@ -83,8 +83,10 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
+		count := uint64(0)
 		for _, k := range keys {
 			v := ss.counters[k]
+			count += v
 			(*writer).Write([]byte(metricName + "_count{" + tagName + "=\"" + k + "\"} " + strconv.FormatUint(v, 10) + "\n"))
 		}
 		keys = []string{}
@@ -92,13 +94,17 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
+		sum := float64(0)
 		for _, k := range keys {
 			v := ss.durations[k]
+			sum += v
 			(*writer).Write([]byte(metricName + "_seconds{" + tagName + "=\"" + k + "\"} " + strconv.FormatFloat(v, 'f', 3, 64) + "\n"))
 		}
 		for _, b := range s.boundaries {
 			v := ss.buckets[b.name]
 			(*writer).Write([]byte(metricName + "_seconds_bucket{le=\"" + b.name + "\"} " + strconv.FormatUint(v, 10) + "\n"))
 		}
+		(*writer).Write([]byte(metricName + "_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
+		(*writer).Write([]byte(metricName + "_seconds_total " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
 	}
 }
