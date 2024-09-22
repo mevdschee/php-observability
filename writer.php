@@ -9,6 +9,9 @@ while (true) {
 
 class Observer
 {
+  public static string $address = 'localhost';
+  public static int $port = 7777;
+
   private static ?Socket $socket = null;
   private static bool $connected = false;
   private static int $connectAt = 0;
@@ -23,7 +26,7 @@ class Observer
       $now = time();
       if ($connect && self::$connectAt != $now) {
         self::$connectAt = $now;
-        self::$connected = @socket_connect(self::$socket, 'localhost', '7777');
+        self::$connected = @socket_connect(self::$socket, self::$address, self::$port);
       }
     }
     return self::$connected;
