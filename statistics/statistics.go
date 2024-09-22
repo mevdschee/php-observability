@@ -57,8 +57,9 @@ func (s *Statistics) Add(name string, tagName string, tag string, val float64) {
 	}
 	ss.counters[tag]++
 	ss.durations[tag] += val
-	for _, b := range s.boundaries {
-		if b.value > val {
+	for i := len(s.boundaries) - 1; i >= 0; i-- {
+		b := s.boundaries[i]
+		if b.value < val {
 			break
 		}
 		ss.buckets[b.name]++
@@ -78,28 +79,27 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		parts := strings.SplitN(name, "|", 2)
 		metricName := parts[0]
 		tagName := parts[1]
+		// counters
+		(*writer).Write([]byte("# HELP " + metricName + "_seconds A counter of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+		(*writer).Write([]byte("# TYPE " + metricName + "_seconds counter\n"))
 		var keys []string
 		for key := range ss.counters {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
 		count := uint64(0)
-		for _, k := range keys {
-			v := ss.counters[k]
-			count += v
-			(*writer).Write([]byte(metricName + "_count{" + tagName + "=\"" + k + "\"} " + strconv.FormatUint(v, 10) + "\n"))
-		}
-		keys = []string{}
-		for key := range ss.durations {
-			keys = append(keys, key)
-		}
-		sort.Strings(keys)
 		sum := float64(0)
 		for _, k := range keys {
-			v := ss.durations[k]
-			sum += v
-			(*writer).Write([]byte(metricName + "_seconds{" + tagName + "=\"" + k + "\"} " + strconv.FormatFloat(v, 'f', 3, 64) + "\n"))
+			c := ss.counters[k]
+			count += c
+			(*writer).Write([]byte(metricName + "_count{" + tagName + "=\"" + k + "\"} " + strconv.FormatUint(c, 10) + "\n"))
+			s := ss.durations[k]
+			sum += s
+			(*writer).Write([]byte(metricName + "_sum{" + tagName + "=\"" + k + "\"} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
 		}
+		// histogram
+		(*writer).Write([]byte("# HELP " + metricName + "_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+		(*writer).Write([]byte("# TYPE " + metricName + "_seconds histogram\n"))
 		for _, b := range s.boundaries {
 			v := ss.buckets[b.name]
 			(*writer).Write([]byte(metricName + "_seconds_bucket{le=\"" + b.name + "\"} " + strconv.FormatUint(v, 10) + "\n"))
