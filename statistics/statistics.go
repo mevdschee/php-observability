@@ -81,7 +81,6 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		tagName := parts[1]
 		// counters
 		(*writer).Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-		(*writer).Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
 		(*writer).Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
 		var keys []string
 		for key := range ss.counters {
@@ -100,7 +99,6 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		}
 		// totals
 		(*writer).Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-		(*writer).Write([]byte("# UNIT " + metricName + "_total_seconds seconds\n"))
 		(*writer).Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
 		for _, b := range s.boundaries {
 			v := ss.buckets[b.name]
