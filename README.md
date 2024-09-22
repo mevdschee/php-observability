@@ -12,11 +12,13 @@ And to stop:
 
     killall php
 
-Now observe the stats:
+Now observe the metrics:
 
 http://localhost:4000/
 
-Example stats:
+NB: The metrics are Prometheus compatible and follow the [OpenMetrics specification](https://github.com/OpenObservability/OpenMetrics/).
+
+Example metrics:
 
     # HELP database_calls_seconds A summary of the database calls.
     # TYPE database_calls_seconds summary
