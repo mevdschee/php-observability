@@ -92,10 +92,10 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		for _, k := range keys {
 			c := ss.counters[k]
 			count += c
-			(*writer).Write([]byte(metricName + "_seconds_count{" + tagName + "=\"" + k + "\"} " + strconv.FormatUint(c, 10) + "\n"))
+			(*writer).Write([]byte(metricName + "_seconds_count{" + tagName + "=\"" + strconv.Quote(k) + "\"} " + strconv.FormatUint(c, 10) + "\n"))
 			s := ss.durations[k]
 			sum += s
-			(*writer).Write([]byte(metricName + "_seconds_sum{" + tagName + "=\"" + k + "\"} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
+			(*writer).Write([]byte(metricName + "_seconds_sum{" + tagName + "=\"" + strconv.Quote(k) + "\"} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
 		}
 		// totals
 		(*writer).Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
