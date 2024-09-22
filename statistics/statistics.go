@@ -68,7 +68,7 @@ func (s *Statistics) Add(name string, tagName string, tag string, val float64) {
 func (s *Statistics) Write(writer *http.ResponseWriter) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	names := make([]string, len(s.names))
+	names := make([]string, 0, len(s.names))
 	for name := range s.names {
 		names = append(names, name)
 	}
@@ -81,7 +81,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		// counters
 		(*writer).Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
 		(*writer).Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
-		keys := make([]string, len(ss.counters))
+		keys := make([]string, 0, len(ss.counters))
 		for key := range ss.counters {
 			keys = append(keys, key)
 		}
