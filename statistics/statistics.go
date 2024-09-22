@@ -81,6 +81,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		tagName := parts[1]
 		// counters
 		(*writer).Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+		(*writer).Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
 		(*writer).Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
 		var keys []string
 		for key := range ss.counters {
@@ -92,19 +93,20 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		for _, k := range keys {
 			c := ss.counters[k]
 			count += c
-			(*writer).Write([]byte(metricName + "_count{" + tagName + "=\"" + k + "\"} " + strconv.FormatUint(c, 10) + "\n"))
+			(*writer).Write([]byte(metricName + "_seconds_count{" + tagName + "=\"" + k + "\"} " + strconv.FormatUint(c, 10) + "\n"))
 			s := ss.durations[k]
 			sum += s
-			(*writer).Write([]byte(metricName + "_sum{" + tagName + "=\"" + k + "\"} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
+			(*writer).Write([]byte(metricName + "_seconds_sum{" + tagName + "=\"" + k + "\"} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
 		}
-		// histogram
-		(*writer).Write([]byte("# HELP " + metricName + "_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-		(*writer).Write([]byte("# TYPE " + metricName + "_seconds histogram\n"))
+		// totals
+		(*writer).Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+		(*writer).Write([]byte("# UNIT " + metricName + "_total_seconds seconds\n"))
+		(*writer).Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
 		for _, b := range s.boundaries {
 			v := ss.buckets[b.name]
-			(*writer).Write([]byte(metricName + "_seconds_bucket{le=\"" + b.name + "\"} " + strconv.FormatUint(v, 10) + "\n"))
+			(*writer).Write([]byte(metricName + "_total_seconds_bucket{le=\"" + b.name + "\"} " + strconv.FormatUint(v, 10) + "\n"))
 		}
-		(*writer).Write([]byte(metricName + "_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
-		(*writer).Write([]byte(metricName + "_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
+		(*writer).Write([]byte(metricName + "_total_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
+		(*writer).Write([]byte(metricName + "_total_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
 	}
 }
