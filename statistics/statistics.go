@@ -1,6 +1,7 @@
 package statistics
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	"sort"
@@ -26,19 +27,17 @@ type Statistics struct {
 	boundaries []Boundary
 }
 
-func New() *Statistics {
+func New(boundaries []float64) *Statistics {
 	s := Statistics{
-		names: map[string]StatisticSet{},
-		boundaries: []Boundary{
-			{"0.001", 0.001},
-			{"0.01", 0.01},
-			{"0.1", 0.1},
-			{"1", 1},
-			{"10", 10},
-			{"100", 100},
-			{"+Inf", math.MaxFloat64},
-		},
+		names:      map[string]StatisticSet{},
+		boundaries: []Boundary{},
 	}
+	sort.Float64s(boundaries)
+	for _, value := range boundaries {
+		name := fmt.Sprintf("%g", value)
+		s.boundaries = append(s.boundaries, Boundary{name, value})
+	}
+	s.boundaries = append(s.boundaries, Boundary{"+Inf", math.MaxFloat64})
 	return &s
 }
 
