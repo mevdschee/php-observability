@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"log"
 	"net"
 	"net/http"
@@ -14,18 +15,21 @@ import (
 var stats = statistics.New()
 
 func main() {
-	go serve()
-	logListener()
+	listenAddress := flag.String("listen", ":7777", "address to listen for high frequent events over TCP")
+	metricsAddress := flag.String("metrics", ":4000", "address to listen for Prometheus metric scraper over HTTP")
+	flag.Parse()
+	go serve(*metricsAddress)
+	logListener(*listenAddress)
 }
 
-func serve() {
-	http.ListenAndServe(":4000", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+func serve(metricsAddress string) {
+	http.ListenAndServe(metricsAddress, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		stats.Write(&writer)
 	}))
 }
 
-func logListener() {
-	lis, err := net.Listen("tcp", ":7777")
+func logListener(listenAddress string) {
+	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		log.Fatalf("failed to start listener: %v", err)
 	}
