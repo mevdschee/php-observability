@@ -12,7 +12,7 @@ import (
 	"github.com/mevdschee/php-observability/statistics"
 )
 
-var stats = statistics.New()
+var stats = statistics.New([]float64{0.001, 0.01, 0.1, 1, 10, 100})
 
 func main() {
 	listenAddress := flag.String("listen", ":7777", "address to listen for high frequent events over TCP")
