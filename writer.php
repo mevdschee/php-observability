@@ -20,6 +20,7 @@ class Observer
   {
     if (!self::$socket) {
       self::$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP) ?: null;
+      socket_set_nonblock(self::$socket);
       self::$connected = false;
     }
     if (!self::$connected) {
