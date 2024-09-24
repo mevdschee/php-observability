@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 
 	"github.com/mevdschee/php-observability/statistics"
 )
@@ -44,23 +45,23 @@ func logListener(listenAddress string) {
 	}
 }
 
-type Metric struct {
-	Key   []string `json:"k"`
-	Value float64  `json:"v"`
-}
-
 func handleConn(conn net.Conn) {
 	defer conn.Close()
 	scan := bufio.NewScanner(conn)
 	for scan.Scan() {
 		input := scan.Text()
-		var metric Metric
-		err := json.Unmarshal([]byte(input), &metric)
-		if err != nil || len(metric.Key) != 3 {
+		var fields []string
+		err := json.Unmarshal([]byte(input), &fields)
+		if err != nil || len(fields) != 4 {
 			log.Printf("malformed input: %v", input)
 			continue
 		}
-		stats.Add(metric.Key[0], metric.Key[1], metric.Key[2], metric.Value)
+		duration, err := strconv.ParseFloat(fields[3], 64)
+		if err != nil {
+			log.Printf("malformed duration: %v", fields[3])
+			continue
+		}
+		stats.Add(fields[0], fields[1], fields[2], duration)
 		log.Printf("received input: %v", input)
 	}
 }
