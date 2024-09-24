@@ -3,7 +3,7 @@
 //Observer::$address = 'localhost';
 //Observer::$port = 7777;
 while (true) {
-  MetricObserver::log("database_calls", "file", "file.php@L123", 1 / 7);
+  MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
   usleep(100 * 1000);
 }
 
