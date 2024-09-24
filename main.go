@@ -44,38 +44,23 @@ func logListener(listenAddress string) {
 	}
 }
 
+type Metric struct {
+	Key   []string `json:"k"`
+	Value float64  `json:"v"`
+}
+
 func handleConn(conn net.Conn) {
 	defer conn.Close()
 	scan := bufio.NewScanner(conn)
 	for scan.Scan() {
 		input := scan.Text()
-		var fields []any
-		err := json.Unmarshal([]byte(input), &fields)
-		if err != nil || len(fields) != 4 {
+		var metric Metric
+		err := json.Unmarshal([]byte(input), &metric)
+		if err != nil || len(metric.Key) != 3 {
 			log.Printf("malformed input: %v\n", input)
 			continue
 		}
-		metricName, ok := fields[0].(string)
-		if !ok {
-			log.Printf("malformed input at pos 0 (metricName)")
-			continue
-		}
-		tagName, ok := fields[1].(string)
-		if !ok {
-			log.Printf("malformed input at pos 1 (tagName)")
-			continue
-		}
-		tagValue, ok := fields[2].(string)
-		if !ok {
-			log.Printf("malformed input at pos 2 (tagValue)")
-			continue
-		}
-		duration, ok := fields[3].(float64)
-		if !ok {
-			log.Printf("malformed input at pos 3 (duration)")
-			continue
-		}
-		stats.Add(metricName, tagName, tagValue, duration)
-		log.Printf("received input: %v", fields)
+		stats.Add(metric.Key[0], metric.Key[1], metric.Key[2], metric.Value)
+		log.Printf("received input: %v", input)
 	}
 }
