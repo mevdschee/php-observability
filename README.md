@@ -1,5 +1,9 @@
 # php-observability
 
+A code base to showcase high frequency logging in PHP and aggregating into metrics using Go. Read the blog post:
+
+[https://tqdev.com/2024-high-frequency-metrics-in-php-using-tcp-sockets](https://tqdev.com/2024-high-frequency-metrics-in-php-using-tcp-sockets)
+
 To run the server:
 
     go run .
