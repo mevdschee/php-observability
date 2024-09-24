@@ -31,8 +31,8 @@ class MetricObserver
       }
     }
     if (self::$connected) {
-      $line = json_encode([$name, $tagName, $tag, $duration]);
-      if (!@socket_write(self::$socket, $line . "\n", strlen($line) + 1)) {
+      $line = json_encode([$name, $tagName, $tag, $duration]) . "\n";
+      if (!@socket_write(self::$socket, $line, strlen($line))) {
         self::$socket = null;
         self::$connected = false;
       }
