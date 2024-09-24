@@ -50,7 +50,10 @@ func handleConn(conn net.Conn) {
 	scan := bufio.NewScanner(conn)
 	for scan.Scan() {
 		input := scan.Text()
-		fields := strings.Split(input, ":")
+		fields := strings.SplitN(input, ":", 4)
+		if len(fields) != 4 {
+			continue
+		}
 		duration, _ := strconv.ParseFloat(fields[3], 64)
 		stats.Add(fields[0], fields[1], fields[2], duration)
 		log.Printf("received input: %v", fields)
