@@ -1,9 +1,9 @@
 <?php
 
-// while (true) {
-//   MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
-//   usleep(100 * 1000);
-// }
+while (true) {
+  MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
+  usleep(100 * 1000);
+}
 
 // echo "firewalled \n";
 // MetricObserver::$address = '192.168.0.177';
@@ -23,14 +23,14 @@
 // }
 // echo (microtime(true) - $time) . "\n";
 
-echo "open \n";
-MetricObserver::$address = 'localhost';
-MetricObserver::$port = 7777;
-$time = microtime(true);
-for ($i = 0; $i < 1000000; $i++) {
-  MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
-}
-echo (microtime(true) - $time) . "\n";
+// echo "open \n";
+// MetricObserver::$address = 'localhost';
+// MetricObserver::$port = 7777;
+// $time = microtime(true);
+// for ($i = 0; $i < 10000000; $i++) {
+//   MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
+// }
+// echo (microtime(true) - $time) . "\n";
 
 class MetricObserver
 {
