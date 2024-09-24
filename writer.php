@@ -3,11 +3,11 @@
 //Observer::$address = 'localhost';
 //Observer::$port = 7777;
 while (true) {
-  Observer::log("database_calls", "file", "file.php@L123", 1 / 7);
+  MetricObserver::log("database_calls", "file", "file.php@L123", 1 / 7);
   usleep(100 * 1000);
 }
 
-class Observer
+class MetricObserver
 {
   public static string $address = 'localhost';
   public static int $port = 7777;
