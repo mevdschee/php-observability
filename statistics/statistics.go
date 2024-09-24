@@ -41,7 +41,7 @@ func New(boundaries []float64) *Statistics {
 	return &s
 }
 
-func (s *Statistics) Add(name string, tagName string, tag string, duration float64) {
+func (s *Statistics) Add(name string, tagName string, tagValue string, duration float64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	key := name + "|" + tagName
@@ -54,8 +54,8 @@ func (s *Statistics) Add(name string, tagName string, tag string, duration float
 		}
 		s.names[key] = ss
 	}
-	ss.counters[tag]++
-	ss.durations[tag] += duration
+	ss.counters[tagValue]++
+	ss.durations[tagValue] += duration
 	for i := len(s.boundaries) - 1; i >= 0; i-- {
 		b := s.boundaries[i]
 		if b.value < duration {
