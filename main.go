@@ -30,14 +30,14 @@ func serve(metricsAddress string) {
 func logListener(listenAddress string) {
 	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
-		log.Fatalf("failed to start listener: %v\n", err)
+		log.Fatalf("failed to start listener: %v", err)
 	}
 	defer lis.Close()
 
 	for {
 		conn, err := lis.Accept()
 		if err != nil {
-			log.Printf("failed to accept conn: %v\n", err)
+			log.Printf("failed to accept conn: %v", err)
 			continue
 		}
 		go handleConn(conn)
@@ -57,7 +57,7 @@ func handleConn(conn net.Conn) {
 		var metric Metric
 		err := json.Unmarshal([]byte(input), &metric)
 		if err != nil || len(metric.Key) != 3 {
-			log.Printf("malformed input: %v\n", input)
+			log.Printf("malformed input: %v", input)
 			continue
 		}
 		stats.Add(metric.Key[0], metric.Key[1], metric.Key[2], metric.Value)
