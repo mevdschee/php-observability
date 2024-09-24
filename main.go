@@ -52,6 +52,7 @@ func handleConn(conn net.Conn) {
 		input := scan.Text()
 		fields := strings.SplitN(input, ":", 4)
 		if len(fields) != 4 {
+			log.Printf("malformed input: %v", input)
 			continue
 		}
 		duration, _ := strconv.ParseFloat(fields[3], 64)
