@@ -15,8 +15,8 @@ import (
 var stats = statistics.New([]float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10})
 
 func main() {
-	listenAddress := flag.String("listen", ":8080", "address to listen for high frequent events over TCP")
-	metricsAddress := flag.String("metrics", ":4000", "address to listen for Prometheus metric scraper over HTTP")
+	listenAddress := flag.String("listen", ":7777", "address to listen for high frequent events over TCP")
+	metricsAddress := flag.String("metrics", ":8080", "address to listen for Prometheus metric scraper over HTTP")
 	flag.Parse()
 	go serve(*metricsAddress)
 	logListener(*listenAddress)
