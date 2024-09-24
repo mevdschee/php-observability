@@ -3,7 +3,7 @@
 //Observer::$address = 'localhost';
 //Observer::$port = 7777;
 while (true) {
-  Observer::log(sprintf("%s:%s:%s:%g", "database_calls", "file", "file.php@L123", 1 / 7));
+  Observer::log("database_calls", "file", "file.php@L123", 1 / 7);
   usleep(100 * 1000);
 }
 
@@ -16,7 +16,7 @@ class Observer
   private static bool $connected = false;
   private static int $connectAt = 0;
 
-  public static function log(string $line)
+  public static function log(string $name, string $tagName, string $tag, float $duration)
   {
     if (!self::$socket) {
       self::$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP) ?: null;
@@ -31,6 +31,7 @@ class Observer
       }
     }
     if (self::$connected) {
+      $line = sprintf("%s:%s:%s:%g", $name, $tagName, $tag, $duration);
       if (!@socket_write(self::$socket, $line . "\n", strlen($line) + 1)) {
         self::$socket = null;
         self::$connected = false;
