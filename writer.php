@@ -8,7 +8,7 @@ while (true) {
 class MetricObserver
 {
   public static string $address = 'localhost';
-  public static int $port = 7777;
+  public static int $port = 8080;
 
   private static ?Socket $socket = null;
   private static bool $connected = false;
