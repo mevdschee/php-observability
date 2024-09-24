@@ -1,9 +1,9 @@
 <?php
 
-while (true) {
-  MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
-  usleep(100 * 1000);
-}
+// while (true) {
+//   MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
+//   usleep(100 * 1000);
+// }
 
 // echo "firewalled \n";
 // MetricObserver::$address = '192.168.0.177';
@@ -23,14 +23,14 @@ while (true) {
 // }
 // echo (microtime(true) - $time) . "\n";
 
-// echo "open \n";
-// MetricObserver::$address = 'localhost';
-// MetricObserver::$port = 7777;
-// $time = microtime(true);
-// for ($i = 0; $i < 10000000; $i++) {
-//   MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
-// }
-// echo (microtime(true) - $time) . "\n";
+echo "open \n";
+MetricObserver::$address = 'localhost';
+MetricObserver::$port = 7777;
+$time = microtime(true);
+for ($i = 0; $i < 1000000; $i++) {
+  MetricObserver::log("database_calls", "file", "file.php@L123", 0.142857);
+}
+echo (microtime(true) - $time) . "\n";
 
 class MetricObserver
 {
@@ -53,7 +53,7 @@ class MetricObserver
         self::$connectAt = $now;
         socket_set_option(self::$socket, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 0, 'usec' => 1]);
         self::$connected = @socket_connect(self::$socket, self::$address, self::$port);
-        socket_set_option(self::$socket, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 1, 'usec' => 0]);
+        socket_set_option(self::$socket, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 30, 'usec' => 0]);
       }
     }
     if (self::$connected) {
