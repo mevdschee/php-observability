@@ -16,7 +16,7 @@ class MetricObserver
 
   public static function logging(): bool
   {
-    if (!self::$socket) {
+    if (self::$socket === null) {
       self::$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP) ?: null;
       self::$connected = false;
     }
