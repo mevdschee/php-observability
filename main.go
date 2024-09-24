@@ -2,12 +2,11 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"log"
 	"net"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/mevdschee/php-observability/statistics"
 )
@@ -31,14 +30,14 @@ func serve(metricsAddress string) {
 func logListener(listenAddress string) {
 	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
-		log.Fatalf("failed to start listener: %v", err)
+		log.Fatalf("failed to start listener: %v\n", err)
 	}
 	defer lis.Close()
 
 	for {
 		conn, err := lis.Accept()
 		if err != nil {
-			log.Printf("failed to accept conn: %v", err)
+			log.Printf("failed to accept conn: %v\n", err)
 			continue
 		}
 		go handleConn(conn)
@@ -50,13 +49,33 @@ func handleConn(conn net.Conn) {
 	scan := bufio.NewScanner(conn)
 	for scan.Scan() {
 		input := scan.Text()
-		fields := strings.SplitN(input, ":", 4)
-		if len(fields) != 4 {
-			log.Printf("malformed input: %v", input)
+		var fields []any
+		err := json.Unmarshal([]byte(input), &fields)
+		if err != nil || len(fields) != 4 {
+			log.Printf("malformed input: %v\n", input)
 			continue
 		}
-		duration, _ := strconv.ParseFloat(fields[3], 64)
-		stats.Add(fields[0], fields[1], fields[2], duration)
+		name, ok := fields[0].(string)
+		if !ok {
+			log.Printf("malformed input at pos 0 (name)")
+			continue
+		}
+		tagName, ok := fields[1].(string)
+		if !ok {
+			log.Printf("malformed input at pos 1 (tagName)")
+			continue
+		}
+		tag, ok := fields[2].(string)
+		if !ok {
+			log.Printf("malformed input at pos 2 (tag)")
+			continue
+		}
+		duration, ok := fields[3].(float64)
+		if !ok {
+			log.Printf("malformed input at pos 3 (duration)")
+			continue
+		}
+		stats.Add(name, tagName, tag, duration)
 		log.Printf("received input: %v", fields)
 	}
 }

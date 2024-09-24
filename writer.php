@@ -31,7 +31,7 @@ class MetricObserver
       }
     }
     if (self::$connected) {
-      $line = sprintf("%s:%s:%s:%g", $name, $tagName, $tag, $duration);
+      $line = json_encode([$name, $tagName, $tag, $duration]);
       if (!@socket_write(self::$socket, $line . "\n", strlen($line) + 1)) {
         self::$socket = null;
         self::$connected = false;
