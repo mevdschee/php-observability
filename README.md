@@ -30,8 +30,8 @@ Here is an example of published metrics:
 
     # HELP database_calls_seconds A summary of the database calls.
     # TYPE database_calls_seconds summary
-    database_calls_seconds_count{file="file.php@L123"} 6630
-    database_calls_seconds_sum{file="file.php@L123"} 947.142
+    database_calls_seconds_count{file="src/Controller/UserController.php@L123@L123"} 6630
+    database_calls_seconds_sum{file="src/Controller/UserController.php@L123@L123"} 947.142
     # HELP database_calls_total_seconds A histogram of the database calls.
     # TYPE database_calls_total_seconds histogram
     database_calls_total_seconds_bucket{le="0.005"} 0
