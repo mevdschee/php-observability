@@ -55,9 +55,9 @@ func handleConn(conn net.Conn) {
 			log.Printf("malformed input: %v\n", input)
 			continue
 		}
-		name, ok := fields[0].(string)
+		metricName, ok := fields[0].(string)
 		if !ok {
-			log.Printf("malformed input at pos 0 (name)")
+			log.Printf("malformed input at pos 0 (metricName)")
 			continue
 		}
 		tagName, ok := fields[1].(string)
@@ -75,7 +75,7 @@ func handleConn(conn net.Conn) {
 			log.Printf("malformed input at pos 3 (duration)")
 			continue
 		}
-		stats.Add(name, tagName, tag, duration)
+		stats.Add(metricName, tagName, tag, duration)
 		log.Printf("received input: %v", fields)
 	}
 }

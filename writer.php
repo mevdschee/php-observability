@@ -16,7 +16,7 @@ class MetricObserver
   private static bool $connected = false;
   private static int $connectAt = 0;
 
-  public static function log(string $name, string $tagName, string $tag, float $duration)
+  public static function log(string $metricName, string $tagName, string $tag, float $duration)
   {
     if (!self::$socket) {
       self::$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP) ?: null;
@@ -31,7 +31,7 @@ class MetricObserver
       }
     }
     if (self::$connected) {
-      $line = json_encode([$name, $tagName, $tag, $duration]) . "\n";
+      $line = json_encode([$metricName, $tagName, $tag, $duration]) . "\n";
       if (!@socket_write(self::$socket, $line, strlen($line))) {
         self::$socket = null;
         self::$connected = false;
