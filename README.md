@@ -14,7 +14,7 @@ And to stop:
 
 Now observe the metrics:
 
-http://localhost:4000/
+http://localhost:8080/
 
 NB: The metrics are Prometheus compatible and follow the [OpenMetrics specification](https://github.com/OpenObservability/OpenMetrics/).
 
