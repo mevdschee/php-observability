@@ -4,6 +4,8 @@ A code base to showcase high frequency logging in PHP and aggregating into metri
 
 [https://tqdev.com/2024-high-frequency-metrics-in-php-using-tcp-sockets](https://tqdev.com/2024-high-frequency-metrics-in-php-using-tcp-sockets)
 
+### Usage
+
 To run the server:
 
     go run .
@@ -22,7 +24,9 @@ http://localhost:8080/
 
 NB: The metrics are Prometheus compatible and follow the [OpenMetrics specification](https://github.com/OpenObservability/OpenMetrics/).
 
-Example metrics:
+### Example metrics
+
+Here is an example of published metrics:
 
     # HELP database_calls_seconds A summary of the database calls.
     # TYPE database_calls_seconds summary
