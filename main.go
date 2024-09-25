@@ -2,12 +2,16 @@ package main
 
 import (
 	"bufio"
+	"encoding/gob"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/mevdschee/php-observability/statistics"
 )
@@ -15,12 +19,15 @@ import (
 var stats = statistics.New()
 
 func main() {
+	urlsToScrape := flag.String("urls", "", "URLs to scrape for Gob metrics over HTTP")
+	scrapeEvery := flag.Duration("every", 5*time.Second, "seconds to wait between scrape requests")
 	listenAddress := flag.String("listen", "localhost:7777", "address to listen for high frequent events over TCP")
 	metricsAddress := flag.String("metrics", ":8080", "address to listen for Prometheus metric scraper over HTTP")
 	binaryAddress := flag.String("binary", ":9999", "address to listen for Gob metric scraper over HTTP")
 	flag.Parse()
 	go serve(*metricsAddress)
 	go serveGob(*binaryAddress)
+	go scrapeUrlsEvery(*urlsToScrape, *scrapeEvery, stats)
 	logListener(*listenAddress)
 }
 
@@ -36,6 +43,57 @@ func serveGob(metricsAddress string) {
 		stats.WriteGob(&writer)
 	}))
 	log.Fatal(err)
+}
+
+func getMetrics(url string) (*statistics.Statistics, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("http get: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("http status: %v", resp.StatusCode)
+	}
+	dec := gob.NewDecoder(resp.Body)
+	s := statistics.Statistics{}
+	err = dec.Decode(&s)
+	if err != nil {
+		return nil, fmt.Errorf("http read body: %v", err)
+	}
+	return &s, nil
+}
+
+func scrapeUrlsEvery(urlsToScrape string, scrapeEvery time.Duration, stats *statistics.Statistics) {
+	if len(urlsToScrape) == 0 {
+		return
+	}
+	for {
+		urls := strings.Split(urlsToScrape, ",")
+		time.Sleep(scrapeEvery)
+		scrapeUrls(urls, stats)
+	}
+}
+
+func scrapeUrls(urls []string, stats *statistics.Statistics) {
+	ch := make(chan *statistics.Statistics)
+	for _, url := range urls {
+		go func(url string) {
+			s, err := getMetrics(url)
+			if err != nil {
+				log.Printf("scrape error: %v", err)
+			}
+			ch <- s
+		}(strings.TrimSpace(url))
+	}
+	for range urls {
+		s := <-ch
+		if stats == nil {
+			stats = s
+		} else {
+			stats.AddStatistics(s)
+		}
+	}
 }
 
 func logListener(listenAddress string) {
