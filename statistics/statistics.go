@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-type Boundary struct {
+type Bucket struct {
 	name  string
 	value float64
 }
@@ -24,20 +24,20 @@ type StatisticSet struct {
 type Statistics struct {
 	mutex      sync.Mutex
 	names      map[string]StatisticSet
-	boundaries []Boundary
+	boundaries []Bucket
 }
 
 func New(boundaries []float64) *Statistics {
 	s := Statistics{
 		names:      map[string]StatisticSet{},
-		boundaries: []Boundary{},
+		boundaries: []Bucket{},
 	}
 	sort.Float64s(boundaries)
 	for _, value := range boundaries {
 		name := fmt.Sprintf("%g", value)
-		s.boundaries = append(s.boundaries, Boundary{name, value})
+		s.boundaries = append(s.boundaries, Bucket{name, value})
 	}
-	s.boundaries = append(s.boundaries, Boundary{"+Inf", math.MaxFloat64})
+	s.boundaries = append(s.boundaries, Bucket{"+Inf", math.MaxFloat64})
 	return &s
 }
 
