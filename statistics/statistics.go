@@ -105,5 +105,6 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		}
 		(*writer).Write([]byte(metricName + "_total_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
 		(*writer).Write([]byte(metricName + "_total_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
+		(*writer).Write([]byte("# EOF"))
 	}
 }
