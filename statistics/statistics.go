@@ -1,6 +1,7 @@
 package statistics
 
 import (
+	"compress/gzip"
 	"encoding/gob"
 	"fmt"
 	"log"
@@ -74,6 +75,9 @@ func (s *Statistics) Add(name string, tagName string, tagValue string, duration 
 func (s *Statistics) Write(writer *http.ResponseWriter) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+	(*writer).Header().Set("Content-Encoding", "gzip")
+	gw := gzip.NewWriter((*writer))
+	defer gw.Close()
 	names := make([]string, 0, len(s.Names))
 	for name := range s.Names {
 		names = append(names, name)
@@ -85,9 +89,9 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		metricName := parts[0]
 		tagName := parts[1]
 		// counters
-		(*writer).Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
-		(*writer).Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
-		(*writer).Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+		gw.Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
+		gw.Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
+		gw.Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
 		keys := make([]string, 0, len(ss.Counters))
 		for key := range ss.Counters {
 			keys = append(keys, key)
@@ -98,23 +102,23 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		for _, k := range keys {
 			c := ss.Counters[k]
 			count += c
-			(*writer).Write([]byte(metricName + "_seconds_count{" + tagName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
+			gw.Write([]byte(metricName + "_seconds_count{" + tagName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
 			s := ss.Durations[k]
 			sum += s
-			(*writer).Write([]byte(metricName + "_seconds_sum{" + tagName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
+			gw.Write([]byte(metricName + "_seconds_sum{" + tagName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
 		}
 		// totals
-		(*writer).Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
-		(*writer).Write([]byte("# UNIT " + metricName + "_total_seconds seconds\n"))
-		(*writer).Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+		gw.Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
+		gw.Write([]byte("# UNIT " + metricName + "_total_seconds seconds\n"))
+		gw.Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
 		for _, b := range s.Buckets {
 			v := ss.Buckets[b.Name]
-			(*writer).Write([]byte(metricName + "_total_seconds_bucket{le=" + strconv.Quote(b.Name) + "} " + strconv.FormatUint(v, 10) + "\n"))
+			gw.Write([]byte(metricName + "_total_seconds_bucket{le=" + strconv.Quote(b.Name) + "} " + strconv.FormatUint(v, 10) + "\n"))
 		}
-		(*writer).Write([]byte(metricName + "_total_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
-		(*writer).Write([]byte(metricName + "_total_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
+		gw.Write([]byte(metricName + "_total_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
+		gw.Write([]byte(metricName + "_total_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
 	}
-	(*writer).Write([]byte("# EOF\n"))
+	gw.Write([]byte("# EOF\n"))
 }
 
 func (s *Statistics) WriteGob(writer *http.ResponseWriter) {
