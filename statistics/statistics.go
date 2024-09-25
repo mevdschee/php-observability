@@ -115,7 +115,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 
 func (s *Statistics) WriteGob(writer *http.ResponseWriter) {
 	enc := gob.NewEncoder((*writer))
-	err := enc.Encode(s.Names)
+	err := enc.Encode(s)
 	if err != nil {
 		log.Fatal("encode:", err)
 	}
