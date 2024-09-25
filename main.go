@@ -25,15 +25,17 @@ func main() {
 }
 
 func serve(metricsAddress string) {
-	http.ListenAndServe(metricsAddress, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+	err := http.ListenAndServe(metricsAddress, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		stats.Write(&writer)
 	}))
+	log.Fatal(err)
 }
 
 func serveGob(metricsAddress string) {
-	http.ListenAndServe(metricsAddress, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+	err := http.ListenAndServe(metricsAddress, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		stats.WriteGob(&writer)
 	}))
+	log.Fatal(err)
 }
 
 func logListener(listenAddress string) {
