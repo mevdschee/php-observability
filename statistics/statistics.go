@@ -29,6 +29,10 @@ type Statistics struct {
 	Buckets []Bucket
 }
 
+func NewDefault() *Statistics {
+	return New([]float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10})
+}
+
 func New(buckets []float64) *Statistics {
 	s := Statistics{
 		Names:   map[string]StatisticSet{},
