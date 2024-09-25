@@ -121,6 +121,27 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 	gw.Write([]byte("# EOF\n"))
 }
 
+func (s *Statistics) AddStatistics(s2 *Statistics) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	for key, value := range s2.Names {
+		ss, exists := s.Names[key]
+		if !exists {
+			s.Names[key] = value
+		} else {
+			for k, v := range value.Counters {
+				ss.Counters[k] += v
+			}
+			for k, v := range value.Durations {
+				ss.Durations[k] += v
+			}
+			for k, v := range value.Buckets {
+				ss.Buckets[k] += v
+			}
+		}
+	}
+}
+
 func (s *Statistics) WriteGob(writer *http.ResponseWriter) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
