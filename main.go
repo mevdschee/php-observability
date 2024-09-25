@@ -79,6 +79,7 @@ func scrapeUrls(urls []string, stats *statistics.Statistics) {
 	ch := make(chan *statistics.Statistics)
 	for _, url := range urls {
 		go func(url string) {
+			log.Printf("get: %v", url)
 			s, err := getMetrics(url)
 			if err != nil {
 				log.Printf("scrape error: %v", err)
