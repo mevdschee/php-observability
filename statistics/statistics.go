@@ -79,8 +79,9 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		metricName := parts[0]
 		tagName := parts[1]
 		// counters
-		(*writer).Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
 		(*writer).Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
+		(*writer).Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
+		(*writer).Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
 		keys := make([]string, 0, len(ss.counters))
 		for key := range ss.counters {
 			keys = append(keys, key)
@@ -97,8 +98,9 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 			(*writer).Write([]byte(metricName + "_seconds_sum{" + tagName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
 		}
 		// totals
-		(*writer).Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
 		(*writer).Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
+		(*writer).Write([]byte("# UNIT " + metricName + "_total_seconds seconds\n"))
+		(*writer).Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
 		for _, b := range s.boundaries {
 			v := ss.buckets[b.name]
 			(*writer).Write([]byte(metricName + "_total_seconds_bucket{le=" + strconv.Quote(b.name) + "} " + strconv.FormatUint(v, 10) + "\n"))
