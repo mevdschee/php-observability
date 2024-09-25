@@ -24,6 +24,12 @@ http://localhost:8080/
 
 NB: The metrics are Prometheus compatible and follow the [OpenMetrics specification](https://github.com/OpenObservability/OpenMetrics/).
 
+The metrics are also served in a tiny binary format on:
+
+http://localhost:9999/
+
+This endpoint can be scraped by other tools such as php-observability and timescaledb-importer
+
 ### Example metrics
 
 Here is an example of published metrics:
