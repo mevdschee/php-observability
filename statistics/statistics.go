@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"encoding/gob"
 	"fmt"
-	"log"
 	"math"
 	"net/http"
 	"sort"
@@ -142,12 +141,14 @@ func (s *Statistics) AddStatistics(s2 *Statistics) {
 	}
 }
 
-func (s *Statistics) WriteGob(writer *http.ResponseWriter) {
+func (s *Statistics) WriteGob(writer *http.ResponseWriter) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	enc := gob.NewEncoder((*writer))
-	err := enc.Encode(s)
-	if err != nil {
-		log.Fatal("encode:", err)
-	}
+	return gob.NewEncoder((*writer)).Encode(s)
+}
+
+func (s *Statistics) ReadGob(resp *http.Response) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return gob.NewDecoder(resp.Body).Decode(s)
 }
