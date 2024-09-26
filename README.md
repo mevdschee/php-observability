@@ -4,6 +4,10 @@ A code base to showcase high frequency logging in PHP and aggregating into metri
 
 [https://tqdev.com/2024-high-frequency-metrics-in-php-using-tcp-sockets](https://tqdev.com/2024-high-frequency-metrics-in-php-using-tcp-sockets)
 
+and
+
+[https://tqdev.com/2024-distributed-metrics-in-php-using-go-and-gob](https://tqdev.com/2024-distributed-metrics-in-php-using-go-and-gob)
+
 ### Usage
 
 To run the server:
