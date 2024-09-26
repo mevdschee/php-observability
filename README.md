@@ -28,7 +28,7 @@ The metrics are also served in the gob binary format on:
 
 http://localhost:9999/
 
-This endpoint can be scraped by other tools such as this tool (creating a mesh) suing the "-scrape" parameter.
+This endpoint can be scraped by other tools such as this tool (creating a mesh) by using the "-scrape" parameter.
 
 ### Example metrics
 
