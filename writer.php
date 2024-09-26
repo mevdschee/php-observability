@@ -32,10 +32,10 @@ class MetricObserver
     return self::$connected;
   }
 
-  public static function log(string $metricName, string $tagName, string $tagValue, float $duration)
+  public static function log(string $metricName, string $labelName, string $labelValue, float $duration)
   {
     if (self::logging()) {
-      $line = json_encode([$metricName, $tagName, $tagValue, (string)$duration]);
+      $line = json_encode([$metricName, $labelName, $labelValue, (string)$duration]);
       if (!@socket_write(self::$socket, $line . "\n", strlen($line) + 1)) {
         self::$socket = null;
         self::$connected = false;

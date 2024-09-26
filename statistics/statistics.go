@@ -48,10 +48,10 @@ func NewWithBuckets(buckets []float64) *Statistics {
 	return &s
 }
 
-func (s *Statistics) Add(name string, tagName string, tagValue string, duration float64) {
+func (s *Statistics) Add(name string, labelName string, labelValue string, duration float64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	key := name + "|" + tagName
+	key := name + "|" + labelName
 	ss, exists := s.Names[key]
 	if !exists {
 		ss = StatisticSet{
@@ -61,8 +61,8 @@ func (s *Statistics) Add(name string, tagName string, tagValue string, duration 
 		}
 		s.Names[key] = ss
 	}
-	ss.Counters[tagValue]++
-	ss.Durations[tagValue] += duration
+	ss.Counters[labelValue]++
+	ss.Durations[labelValue] += duration
 	for i := len(s.Buckets) - 1; i >= 0; i-- {
 		b := s.Buckets[i]
 		if b.Value < duration {
@@ -87,7 +87,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		ss := s.Names[name]
 		parts := strings.SplitN(name, "|", 2)
 		metricName := parts[0]
-		tagName := parts[1]
+		labelName := parts[1]
 		// counters
 		gw.Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
 		gw.Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
@@ -102,10 +102,10 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		for _, k := range keys {
 			c := ss.Counters[k]
 			count += c
-			gw.Write([]byte(metricName + "_seconds_count{" + tagName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
+			gw.Write([]byte(metricName + "_seconds_count{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
 			s := ss.Durations[k]
 			sum += s
-			gw.Write([]byte(metricName + "_seconds_sum{" + tagName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
+			gw.Write([]byte(metricName + "_seconds_sum{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
 		}
 		// totals
 		gw.Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
