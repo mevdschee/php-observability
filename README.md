@@ -28,7 +28,7 @@ The metrics are also served in the Gob binary format on:
 
 http://localhost:9999/
 
-This endpoint can be scraped by other tools such as this tool itself (creating a mesh) by using the "-scrape" parameter.
+This endpoint can be scraped by other tools such as [metrics-db-importer](https://github.com/mevdschee/metrics-db-importer) or this tool itself to aggregate the metrics of multiple nodes (using the "-scrape" parameter).
 
 ### Example metrics
 
