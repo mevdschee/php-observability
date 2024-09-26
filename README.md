@@ -24,7 +24,7 @@ http://localhost:8080/
 
 NB: The metrics are Prometheus compatible and follow the [OpenMetrics specification](https://github.com/OpenObservability/OpenMetrics/).
 
-The metrics are also served in the gob binary format on:
+The metrics are also served in the Gob binary format on:
 
 http://localhost:9999/
 
