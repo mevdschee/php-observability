@@ -87,10 +87,12 @@ func scrapeUrls(urls []string, stats *statistics.Statistics) {
 	}
 	for range urls {
 		s := <-ch
-		if stats == nil {
-			stats = s
-		} else {
-			stats.AddStatistics(s)
+		if s != nil {
+			if stats == nil {
+				stats = s
+			} else {
+				stats.AddStatistics(s)
+			}
 		}
 	}
 }
