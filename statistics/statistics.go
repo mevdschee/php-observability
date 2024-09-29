@@ -112,7 +112,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 			v := ss.Buckets[b.Name]
 			gw.Write([]byte(metricName + "_total_seconds_bucket{le=" + strconv.Quote(b.Name) + "} " + strconv.FormatUint(v, 10) + "\n"))
 		}
-		gw.Write([]byte(metricName + "_total_seconds_bucket{le=+Inf} " + strconv.FormatUint(count, 10) + "\n"))
+		gw.Write([]byte(metricName + "_total_seconds_bucket{le=\"+Inf\"} " + strconv.FormatUint(count, 10) + "\n"))
 		gw.Write([]byte(metricName + "_total_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
 		gw.Write([]byte(metricName + "_total_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
 	}
