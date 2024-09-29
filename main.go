@@ -66,9 +66,9 @@ func scrapeUrlsEvery(urlsToScrape string, scrapeEvery time.Duration, stats *stat
 	if len(urlsToScrape) == 0 {
 		return
 	}
-	for {
-		urls := strings.Split(urlsToScrape, ",")
-		time.Sleep(scrapeEvery)
+	urls := strings.Split(urlsToScrape, ",")
+	ticker := time.NewTicker(scrapeEvery)
+	for range ticker.C {
 		scrapeUrls(urls, stats)
 	}
 }
