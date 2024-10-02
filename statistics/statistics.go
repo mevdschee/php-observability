@@ -105,50 +105,51 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		metricName := parts[0]
 		labelName := parts[1]
 		// counts
-		gw.Write([]byte("# TYPE " + metricName + " counter\n"))
-		gw.Write([]byte("# HELP " + metricName + " A counter of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-		keys := make([]string, 0, len(ss.Counts))
-		for key := range ss.Counts {
-			keys = append(keys, key)
+		if len(ss.Counts) > 0 {
+			gw.Write([]byte("# TYPE " + metricName + " counter\n"))
+			gw.Write([]byte("# HELP " + metricName + " A counter of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+			keys := make([]string, 0, len(ss.Counts))
+			for key := range ss.Counts {
+				keys = append(keys, key)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				c := ss.Counts[k]
+				gw.Write([]byte(metricName + "_total{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
+			}
 		}
-		sort.Strings(keys)
-		count := uint64(0)
-		for _, k := range keys {
-			c := ss.Counts[k]
-			count += c
-			gw.Write([]byte(metricName + "_total{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
-		}
-		gw.Write([]byte(metricName + "_total " + strconv.FormatUint(count, 10) + "\n"))
 		// counters
-		gw.Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
-		gw.Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
-		gw.Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-		keys = make([]string, 0, len(ss.Counters))
-		for key := range ss.Counters {
-			keys = append(keys, key)
+		if len(ss.Counters) > 0 {
+			gw.Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
+			gw.Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
+			gw.Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+			keys := make([]string, 0, len(ss.Counters))
+			for key := range ss.Counters {
+				keys = append(keys, key)
+			}
+			sort.Strings(keys)
+			count := uint64(0)
+			sum := float64(0)
+			for _, k := range keys {
+				c := ss.Counters[k]
+				count += c
+				gw.Write([]byte(metricName + "_seconds_count{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
+				s := ss.Durations[k]
+				sum += s
+				gw.Write([]byte(metricName + "_seconds_sum{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
+			}
+			// totals
+			gw.Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
+			gw.Write([]byte("# UNIT " + metricName + "_total_seconds seconds\n"))
+			gw.Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
+			for _, b := range s.Buckets {
+				v := ss.Buckets[b.Name]
+				gw.Write([]byte(metricName + "_total_seconds_bucket{le=" + strconv.Quote(b.Name) + "} " + strconv.FormatUint(v, 10) + "\n"))
+			}
+			gw.Write([]byte(metricName + "_total_seconds_bucket{le=\"+Inf\"} " + strconv.FormatUint(count, 10) + "\n"))
+			gw.Write([]byte(metricName + "_total_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
+			gw.Write([]byte(metricName + "_total_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
 		}
-		sort.Strings(keys)
-		count = uint64(0)
-		sum := float64(0)
-		for _, k := range keys {
-			c := ss.Counters[k]
-			count += c
-			gw.Write([]byte(metricName + "_seconds_count{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
-			s := ss.Durations[k]
-			sum += s
-			gw.Write([]byte(metricName + "_seconds_sum{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
-		}
-		// totals
-		gw.Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
-		gw.Write([]byte("# UNIT " + metricName + "_total_seconds seconds\n"))
-		gw.Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-		for _, b := range s.Buckets {
-			v := ss.Buckets[b.Name]
-			gw.Write([]byte(metricName + "_total_seconds_bucket{le=" + strconv.Quote(b.Name) + "} " + strconv.FormatUint(v, 10) + "\n"))
-		}
-		gw.Write([]byte(metricName + "_total_seconds_bucket{le=\"+Inf\"} " + strconv.FormatUint(count, 10) + "\n"))
-		gw.Write([]byte(metricName + "_total_seconds_sum " + strconv.FormatFloat(sum, 'f', 3, 64) + "\n"))
-		gw.Write([]byte(metricName + "_total_seconds_count " + strconv.FormatUint(count, 10) + "\n"))
 	}
 	gw.Write([]byte("# EOF\n"))
 }
