@@ -17,10 +17,10 @@ type Bucket struct {
 }
 
 type StatisticSet struct {
-	Counters  map[string]uint64
-	Measures  map[string]uint64
-	Durations map[string]float64
-	Buckets   map[string]uint64
+	Counters     map[string]uint64
+	Measurements map[string]uint64
+	Durations    map[string]float64
+	Buckets      map[string]uint64
 }
 
 type Statistics struct {
@@ -53,10 +53,10 @@ func (s *Statistics) Inc(name string, labelName string, labelValue string, delta
 	ss, exists := s.Names[key]
 	if !exists {
 		ss = StatisticSet{
-			Counters:  map[string]uint64{},
-			Measures:  map[string]uint64{},
-			Durations: map[string]float64{},
-			Buckets:   map[string]uint64{},
+			Counters:     map[string]uint64{},
+			Measurements: map[string]uint64{},
+			Durations:    map[string]float64{},
+			Buckets:      map[string]uint64{},
 		}
 		s.Names[key] = ss
 	}
@@ -70,14 +70,14 @@ func (s *Statistics) Add(name string, labelName string, labelValue string, durat
 	ss, exists := s.Names[key]
 	if !exists {
 		ss = StatisticSet{
-			Counters:  map[string]uint64{},
-			Measures:  map[string]uint64{},
-			Durations: map[string]float64{},
-			Buckets:   map[string]uint64{},
+			Counters:     map[string]uint64{},
+			Measurements: map[string]uint64{},
+			Durations:    map[string]float64{},
+			Buckets:      map[string]uint64{},
 		}
 		s.Names[key] = ss
 	}
-	ss.Measures[labelValue]++
+	ss.Measurements[labelValue]++
 	ss.Durations[labelValue] += duration
 	for i := len(s.Buckets) - 1; i >= 0; i-- {
 		b := s.Buckets[i]
@@ -118,20 +118,20 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 				gw.Write([]byte(metricName + "_total{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
 			}
 		}
-		// measures
-		if len(ss.Measures) > 0 {
+		// Measurements
+		if len(ss.Measurements) > 0 {
 			gw.Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
 			gw.Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
 			gw.Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-			keys := make([]string, 0, len(ss.Measures))
-			for key := range ss.Measures {
+			keys := make([]string, 0, len(ss.Measurements))
+			for key := range ss.Measurements {
 				keys = append(keys, key)
 			}
 			sort.Strings(keys)
 			count := uint64(0)
 			sum := float64(0)
 			for _, k := range keys {
-				c := ss.Measures[k]
+				c := ss.Measurements[k]
 				count += c
 				gw.Write([]byte(metricName + "_seconds_count{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
 				s := ss.Durations[k]
@@ -165,8 +165,8 @@ func (s *Statistics) AddStatistics(s2 *Statistics) {
 			for k, v := range value.Counters {
 				ss.Counters[k] += v
 			}
-			for k, v := range value.Measures {
-				ss.Measures[k] += v
+			for k, v := range value.Measurements {
+				ss.Measurements[k] += v
 			}
 			for k, v := range value.Durations {
 				ss.Durations[k] += v
