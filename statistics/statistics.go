@@ -17,8 +17,8 @@ type Bucket struct {
 }
 
 type StatisticSet struct {
-	Counts    map[string]uint64
 	Counters  map[string]uint64
+	Measures  map[string]uint64
 	Durations map[string]float64
 	Buckets   map[string]uint64
 }
@@ -53,14 +53,14 @@ func (s *Statistics) Inc(name string, labelName string, labelValue string, delta
 	ss, exists := s.Names[key]
 	if !exists {
 		ss = StatisticSet{
-			Counts:    map[string]uint64{},
 			Counters:  map[string]uint64{},
+			Measures:  map[string]uint64{},
 			Durations: map[string]float64{},
 			Buckets:   map[string]uint64{},
 		}
 		s.Names[key] = ss
 	}
-	ss.Counts[labelValue] += delta
+	ss.Counters[labelValue] += delta
 }
 
 func (s *Statistics) Add(name string, labelName string, labelValue string, duration float64) {
@@ -70,14 +70,14 @@ func (s *Statistics) Add(name string, labelName string, labelValue string, durat
 	ss, exists := s.Names[key]
 	if !exists {
 		ss = StatisticSet{
-			Counts:    map[string]uint64{},
 			Counters:  map[string]uint64{},
+			Measures:  map[string]uint64{},
 			Durations: map[string]float64{},
 			Buckets:   map[string]uint64{},
 		}
 		s.Names[key] = ss
 	}
-	ss.Counters[labelValue]++
+	ss.Measures[labelValue]++
 	ss.Durations[labelValue] += duration
 	for i := len(s.Buckets) - 1; i >= 0; i-- {
 		b := s.Buckets[i]
@@ -104,34 +104,34 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 		parts := strings.SplitN(name, "|", 2)
 		metricName := parts[0]
 		labelName := parts[1]
-		// counts
-		if len(ss.Counts) > 0 {
+		// counters
+		if len(ss.Counters) > 0 {
 			gw.Write([]byte("# TYPE " + metricName + " counter\n"))
 			gw.Write([]byte("# HELP " + metricName + " A counter of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-			keys := make([]string, 0, len(ss.Counts))
-			for key := range ss.Counts {
+			keys := make([]string, 0, len(ss.Counters))
+			for key := range ss.Counters {
 				keys = append(keys, key)
 			}
 			sort.Strings(keys)
 			for _, k := range keys {
-				c := ss.Counts[k]
+				c := ss.Counters[k]
 				gw.Write([]byte(metricName + "_total{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
 			}
 		}
-		// counters
-		if len(ss.Counters) > 0 {
+		// measures
+		if len(ss.Measures) > 0 {
 			gw.Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
 			gw.Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
 			gw.Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-			keys := make([]string, 0, len(ss.Counters))
-			for key := range ss.Counters {
+			keys := make([]string, 0, len(ss.Measures))
+			for key := range ss.Measures {
 				keys = append(keys, key)
 			}
 			sort.Strings(keys)
 			count := uint64(0)
 			sum := float64(0)
 			for _, k := range keys {
-				c := ss.Counters[k]
+				c := ss.Measures[k]
 				count += c
 				gw.Write([]byte(metricName + "_seconds_count{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
 				s := ss.Durations[k]
@@ -164,6 +164,9 @@ func (s *Statistics) AddStatistics(s2 *Statistics) {
 		} else {
 			for k, v := range value.Counters {
 				ss.Counters[k] += v
+			}
+			for k, v := range value.Measures {
+				ss.Measures[k] += v
 			}
 			for k, v := range value.Durations {
 				ss.Durations[k] += v
