@@ -20,7 +20,7 @@ var stats = statistics.New()
 func main() {
 	urlsToScrape := flag.String("scrape", "", "comma seperated list of URLs to scrape for Gob metrics")
 	scrapeEvery := flag.Duration("every", 5*time.Second, "seconds to wait between scrape requests")
-	listenAddress := flag.String("listen", "localhost:7777", "address to listen for high frequent events over TCP")
+	listenAddress := flag.String("listen", ":7777", "address to listen for high frequent events over TCP")
 	metricsAddress := flag.String("metrics", ":8080", "address to listen for Prometheus metric scraper over HTTP")
 	binaryAddress := flag.String("binary", ":9999", "address to listen for Gob metric scraper over HTTP")
 	flag.Parse()
