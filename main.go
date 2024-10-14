@@ -131,6 +131,7 @@ func handleConn(conn net.Conn) {
 			continue
 		}
 		stats.Add(fields[0], fields[1], fields[2], duration)
-		log.Printf("received input: %v", input)
+		// Too many logs, disabled for now
+		// log.Printf("received input: %v", input)
 	}
 }
