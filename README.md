@@ -10,7 +10,7 @@ and
 
 ### Requirements
 
-- PHP 8 or higher (see special PHP 7 version)
+- PHP 8 or higher (see special PHP 5/7 compatible version)
 - Go 1.22 build environment
 
 ### Usage
