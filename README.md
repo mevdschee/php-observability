@@ -8,6 +8,10 @@ and
 
 [https://tqdev.com/2024-distributed-metrics-in-php-using-go-and-gob](https://tqdev.com/2024-distributed-metrics-in-php-using-go-and-gob)
 
+### Requirements
+
+- PHP 7.4 and higher
+
 ### Usage
 
 To run the server:
