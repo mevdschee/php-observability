@@ -1,6 +1,6 @@
 <?php
 
-include 'writer.php';
+include 'MetricObserver.php';
 
 echo "MetricObserver::log() to a closed port\n";
 MetricObserver::$port = 7778;
