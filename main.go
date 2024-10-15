@@ -8,6 +8,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"time"
@@ -18,21 +20,39 @@ import (
 var stats = metrics.New()
 
 func main() {
+	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	memprofile := flag.String("memprofile", "", "write mem profile to file")
 	urlsToScrape := flag.String("scrape", "", "comma seperated list of URLs to scrape for Gob metrics")
 	scrapeEvery := flag.Duration("every", 5*time.Second, "seconds to wait between scrape requests")
 	listenAddress := flag.String("listen", "localhost:7777", "address to listen for high frequent events over TCP")
 	metricsAddress := flag.String("metrics", ":8080", "address to listen for Prometheus metric scraper over HTTP")
 	binaryAddress := flag.String("binary", ":9999", "address to listen for Gob metric scraper over HTTP")
 	flag.Parse()
-	go serve(*metricsAddress)
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+	go serve(*memprofile, *metricsAddress)
 	go serveGob(*binaryAddress)
 	go scrapeUrlsEvery(*urlsToScrape, *scrapeEvery, stats)
 	logListener(*listenAddress)
 }
 
-func serve(metricsAddress string) {
+func serve(memprofile, metricsAddress string) {
 	err := http.ListenAndServe(metricsAddress, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		stats.Write(&writer)
+		if memprofile != "" {
+			f, err := os.Create(memprofile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			pprof.WriteHeapProfile(f)
+			f.Close()
+		}
 	}))
 	log.Fatal(err)
 }
