@@ -34,107 +34,107 @@ func New() *Metrics {
 }
 
 func NewWithBuckets(buckets []float64) *Metrics {
-	s := Metrics{
+	m := Metrics{
 		Names:   map[string]MetricSet{},
 		Buckets: []Bucket{},
 	}
 	sort.Float64s(buckets)
 	for _, value := range buckets {
 		name := fmt.Sprintf("%g", value)
-		s.Buckets = append(s.Buckets, Bucket{name, value})
+		m.Buckets = append(m.Buckets, Bucket{name, value})
 	}
-	return &s
+	return &m
 }
 
-func (s *Metrics) Inc(name string, labelName string, labelValue string, delta uint64) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func (m *Metrics) Inc(name string, labelName string, labelValue string, delta uint64) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	key := name + "|" + labelName
-	ss, exists := s.Names[key]
+	ms, exists := m.Names[key]
 	if !exists {
-		ss = MetricSet{
+		ms = MetricSet{
 			Counters:       map[string]uint64{},
 			DurationCounts: map[string]uint64{},
 			DurationSums:   map[string]float64{},
 			Buckets:        map[string]uint64{},
 		}
-		s.Names[key] = ss
+		m.Names[key] = ms
 	}
-	ss.Counters[labelValue] += delta
+	ms.Counters[labelValue] += delta
 }
 
-func (s *Metrics) Add(name string, labelName string, labelValue string, duration float64) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func (m *Metrics) Add(name string, labelName string, labelValue string, duration float64) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	key := name + "|" + labelName
-	ss, exists := s.Names[key]
+	ms, exists := m.Names[key]
 	if !exists {
-		ss = MetricSet{
+		ms = MetricSet{
 			Counters:       map[string]uint64{},
 			DurationCounts: map[string]uint64{},
 			DurationSums:   map[string]float64{},
 			Buckets:        map[string]uint64{},
 		}
-		s.Names[key] = ss
+		m.Names[key] = ms
 	}
-	ss.DurationCounts[labelValue]++
-	ss.DurationSums[labelValue] += duration
-	for i := len(s.Buckets) - 1; i >= 0; i-- {
-		b := s.Buckets[i]
+	ms.DurationCounts[labelValue]++
+	ms.DurationSums[labelValue] += duration
+	for i := len(m.Buckets) - 1; i >= 0; i-- {
+		b := m.Buckets[i]
 		if b.Value < duration {
 			break
 		}
-		ss.Buckets[b.Name]++
+		ms.Buckets[b.Name]++
 	}
 }
 
-func (s *Metrics) Write(writer *http.ResponseWriter) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func (m *Metrics) Write(writer *http.ResponseWriter) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	(*writer).Header().Set("Content-Encoding", "gzip")
 	gw := gzip.NewWriter((*writer))
 	defer gw.Close()
-	names := make([]string, 0, len(s.Names))
-	for name := range s.Names {
+	names := make([]string, 0, len(m.Names))
+	for name := range m.Names {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 	for _, name := range names {
-		ss := s.Names[name]
+		ms := m.Names[name]
 		parts := strings.SplitN(name, "|", 2)
 		metricName := parts[0]
 		labelName := parts[1]
 		// counters
-		if len(ss.Counters) > 0 {
+		if len(ms.Counters) > 0 {
 			gw.Write([]byte("# TYPE " + metricName + " counter\n"))
 			gw.Write([]byte("# HELP " + metricName + " A counter of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-			keys := make([]string, 0, len(ss.Counters))
-			for key := range ss.Counters {
+			keys := make([]string, 0, len(ms.Counters))
+			for key := range ms.Counters {
 				keys = append(keys, key)
 			}
 			sort.Strings(keys)
 			for _, k := range keys {
-				c := ss.Counters[k]
+				c := ms.Counters[k]
 				gw.Write([]byte(metricName + "_total{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
 			}
 		}
 		// DurationCounts
-		if len(ss.DurationCounts) > 0 {
+		if len(ms.DurationCounts) > 0 {
 			gw.Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
 			gw.Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
 			gw.Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-			keys := make([]string, 0, len(ss.DurationCounts))
-			for key := range ss.DurationCounts {
+			keys := make([]string, 0, len(ms.DurationCounts))
+			for key := range ms.DurationCounts {
 				keys = append(keys, key)
 			}
 			sort.Strings(keys)
 			count := uint64(0)
 			sum := float64(0)
 			for _, k := range keys {
-				c := ss.DurationCounts[k]
+				c := ms.DurationCounts[k]
 				count += c
 				gw.Write([]byte(metricName + "_seconds_count{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
-				s := ss.DurationSums[k]
+				s := ms.DurationSums[k]
 				sum += s
 				gw.Write([]byte(metricName + "_seconds_sum{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
 			}
@@ -142,8 +142,8 @@ func (s *Metrics) Write(writer *http.ResponseWriter) {
 			gw.Write([]byte("# TYPE " + metricName + "_total_seconds histogram\n"))
 			gw.Write([]byte("# UNIT " + metricName + "_total_seconds seconds\n"))
 			gw.Write([]byte("# HELP " + metricName + "_total_seconds A histogram of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-			for _, b := range s.Buckets {
-				v := ss.Buckets[b.Name]
+			for _, b := range m.Buckets {
+				v := ms.Buckets[b.Name]
 				gw.Write([]byte(metricName + "_total_seconds_bucket{le=" + strconv.Quote(b.Name) + "} " + strconv.FormatUint(v, 10) + "\n"))
 			}
 			gw.Write([]byte(metricName + "_total_seconds_bucket{le=\"+Inf\"} " + strconv.FormatUint(count, 10) + "\n"))
@@ -154,38 +154,38 @@ func (s *Metrics) Write(writer *http.ResponseWriter) {
 	gw.Write([]byte("# EOF\n"))
 }
 
-func (s *Metrics) AddMetrics(s2 *Metrics) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func (m *Metrics) AddMetrics(s2 *Metrics) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	for key, value := range s2.Names {
-		ss, exists := s.Names[key]
+		ms, exists := m.Names[key]
 		if !exists {
-			s.Names[key] = value
+			m.Names[key] = value
 		} else {
 			for k, v := range value.Counters {
-				ss.Counters[k] += v
+				ms.Counters[k] += v
 			}
 			for k, v := range value.DurationCounts {
-				ss.DurationCounts[k] += v
+				ms.DurationCounts[k] += v
 			}
 			for k, v := range value.DurationSums {
-				ss.DurationSums[k] += v
+				ms.DurationSums[k] += v
 			}
 			for k, v := range value.Buckets {
-				ss.Buckets[k] += v
+				ms.Buckets[k] += v
 			}
 		}
 	}
 }
 
-func (s *Metrics) WriteGob(writer *http.ResponseWriter) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return gob.NewEncoder((*writer)).Encode(s)
+func (m *Metrics) WriteGob(writer *http.ResponseWriter) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	return gob.NewEncoder((*writer)).Encode(m)
 }
 
-func (s *Metrics) ReadGob(resp *http.Response) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return gob.NewDecoder(resp.Body).Decode(s)
+func (m *Metrics) ReadGob(resp *http.Response) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	return gob.NewDecoder(resp.Body).Decode(m)
 }
