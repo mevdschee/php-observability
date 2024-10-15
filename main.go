@@ -141,16 +141,21 @@ func handleConn(conn net.Conn) {
 		input := scan.Text()
 		var fields []string
 		err := json.Unmarshal([]byte(input), &fields)
-		if err != nil || len(fields) != 4 {
+		if err != nil || (len(fields) != 3 && len(fields) != 4) {
 			log.Printf("malformed input: %v", input)
 			continue
 		}
-		duration, err := strconv.ParseFloat(fields[3], 64)
-		if err != nil {
-			log.Printf("malformed duration: %v", fields[3])
-			continue
+		if len(fields) == 3 {
+			stats.Inc(fields[0], fields[1], fields[2], 1)
 		}
-		stats.Add(fields[0], fields[1], fields[2], duration)
-		log.Printf("received input: %v", input)
+		if len(fields) == 4 {
+			duration, err := strconv.ParseFloat(fields[3], 64)
+			if err != nil {
+				log.Printf("malformed duration: %v", fields[3])
+				continue
+			}
+			stats.Add(fields[0], fields[1], fields[2], duration)
+		}
+		//log.Printf("received input: %v", input)
 	}
 }
