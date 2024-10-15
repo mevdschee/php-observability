@@ -1,4 +1,4 @@
-package statistics
+package metrics
 
 import (
 	"compress/gzip"
@@ -16,26 +16,26 @@ type Bucket struct {
 	Value float64
 }
 
-type StatisticSet struct {
-	Counters     map[string]uint64
-	Measurements map[string]uint64
-	Durations    map[string]float64
-	Buckets      map[string]uint64
+type MetricSet struct {
+	Counters       map[string]uint64
+	DurationCounts map[string]uint64
+	DurationSums   map[string]float64
+	Buckets        map[string]uint64
 }
 
-type Statistics struct {
+type Metrics struct {
 	mutex   sync.Mutex
-	Names   map[string]StatisticSet
+	Names   map[string]MetricSet
 	Buckets []Bucket
 }
 
-func New() *Statistics {
+func New() *Metrics {
 	return NewWithBuckets([]float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10})
 }
 
-func NewWithBuckets(buckets []float64) *Statistics {
-	s := Statistics{
-		Names:   map[string]StatisticSet{},
+func NewWithBuckets(buckets []float64) *Metrics {
+	s := Metrics{
+		Names:   map[string]MetricSet{},
 		Buckets: []Bucket{},
 	}
 	sort.Float64s(buckets)
@@ -46,39 +46,39 @@ func NewWithBuckets(buckets []float64) *Statistics {
 	return &s
 }
 
-func (s *Statistics) Inc(name string, labelName string, labelValue string, delta uint64) {
+func (s *Metrics) Inc(name string, labelName string, labelValue string, delta uint64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	key := name + "|" + labelName
 	ss, exists := s.Names[key]
 	if !exists {
-		ss = StatisticSet{
-			Counters:     map[string]uint64{},
-			Measurements: map[string]uint64{},
-			Durations:    map[string]float64{},
-			Buckets:      map[string]uint64{},
+		ss = MetricSet{
+			Counters:       map[string]uint64{},
+			DurationCounts: map[string]uint64{},
+			DurationSums:   map[string]float64{},
+			Buckets:        map[string]uint64{},
 		}
 		s.Names[key] = ss
 	}
 	ss.Counters[labelValue] += delta
 }
 
-func (s *Statistics) Add(name string, labelName string, labelValue string, duration float64) {
+func (s *Metrics) Add(name string, labelName string, labelValue string, duration float64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	key := name + "|" + labelName
 	ss, exists := s.Names[key]
 	if !exists {
-		ss = StatisticSet{
-			Counters:     map[string]uint64{},
-			Measurements: map[string]uint64{},
-			Durations:    map[string]float64{},
-			Buckets:      map[string]uint64{},
+		ss = MetricSet{
+			Counters:       map[string]uint64{},
+			DurationCounts: map[string]uint64{},
+			DurationSums:   map[string]float64{},
+			Buckets:        map[string]uint64{},
 		}
 		s.Names[key] = ss
 	}
-	ss.Measurements[labelValue]++
-	ss.Durations[labelValue] += duration
+	ss.DurationCounts[labelValue]++
+	ss.DurationSums[labelValue] += duration
 	for i := len(s.Buckets) - 1; i >= 0; i-- {
 		b := s.Buckets[i]
 		if b.Value < duration {
@@ -88,7 +88,7 @@ func (s *Statistics) Add(name string, labelName string, labelValue string, durat
 	}
 }
 
-func (s *Statistics) Write(writer *http.ResponseWriter) {
+func (s *Metrics) Write(writer *http.ResponseWriter) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	(*writer).Header().Set("Content-Encoding", "gzip")
@@ -118,23 +118,23 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 				gw.Write([]byte(metricName + "_total{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
 			}
 		}
-		// Measurements
-		if len(ss.Measurements) > 0 {
+		// DurationCounts
+		if len(ss.DurationCounts) > 0 {
 			gw.Write([]byte("# TYPE " + metricName + "_seconds summary\n"))
 			gw.Write([]byte("# UNIT " + metricName + "_seconds seconds\n"))
 			gw.Write([]byte("# HELP " + metricName + "_seconds A summary of the " + strings.ReplaceAll(metricName, "_", " ") + ".\n"))
-			keys := make([]string, 0, len(ss.Measurements))
-			for key := range ss.Measurements {
+			keys := make([]string, 0, len(ss.DurationCounts))
+			for key := range ss.DurationCounts {
 				keys = append(keys, key)
 			}
 			sort.Strings(keys)
 			count := uint64(0)
 			sum := float64(0)
 			for _, k := range keys {
-				c := ss.Measurements[k]
+				c := ss.DurationCounts[k]
 				count += c
 				gw.Write([]byte(metricName + "_seconds_count{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatUint(c, 10) + "\n"))
-				s := ss.Durations[k]
+				s := ss.DurationSums[k]
 				sum += s
 				gw.Write([]byte(metricName + "_seconds_sum{" + labelName + "=" + strconv.Quote(k) + "} " + strconv.FormatFloat(s, 'f', 3, 64) + "\n"))
 			}
@@ -154,7 +154,7 @@ func (s *Statistics) Write(writer *http.ResponseWriter) {
 	gw.Write([]byte("# EOF\n"))
 }
 
-func (s *Statistics) AddStatistics(s2 *Statistics) {
+func (s *Metrics) AddMetrics(s2 *Metrics) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	for key, value := range s2.Names {
@@ -165,11 +165,11 @@ func (s *Statistics) AddStatistics(s2 *Statistics) {
 			for k, v := range value.Counters {
 				ss.Counters[k] += v
 			}
-			for k, v := range value.Measurements {
-				ss.Measurements[k] += v
+			for k, v := range value.DurationCounts {
+				ss.DurationCounts[k] += v
 			}
-			for k, v := range value.Durations {
-				ss.Durations[k] += v
+			for k, v := range value.DurationSums {
+				ss.DurationSums[k] += v
 			}
 			for k, v := range value.Buckets {
 				ss.Buckets[k] += v
@@ -178,13 +178,13 @@ func (s *Statistics) AddStatistics(s2 *Statistics) {
 	}
 }
 
-func (s *Statistics) WriteGob(writer *http.ResponseWriter) error {
+func (s *Metrics) WriteGob(writer *http.ResponseWriter) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	return gob.NewEncoder((*writer)).Encode(s)
 }
 
-func (s *Statistics) ReadGob(resp *http.Response) error {
+func (s *Metrics) ReadGob(resp *http.Response) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	return gob.NewDecoder(resp.Body).Decode(s)

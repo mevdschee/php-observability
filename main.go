@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mevdschee/php-observability/statistics"
+	"github.com/mevdschee/php-observability/metrics"
 )
 
-var stats = statistics.New()
+var stats = metrics.New()
 
 func main() {
 	urlsToScrape := flag.String("scrape", "", "comma seperated list of URLs to scrape for Gob metrics")
@@ -44,7 +44,7 @@ func serveGob(metricsAddress string) {
 	log.Fatal(err)
 }
 
-func getMetrics(url string) (*statistics.Statistics, error) {
+func getMetrics(url string) (*metrics.Metrics, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("http get: %v", err)
@@ -54,7 +54,7 @@ func getMetrics(url string) (*statistics.Statistics, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http status: %v", resp.StatusCode)
 	}
-	s := statistics.New()
+	s := metrics.New()
 	err = s.ReadGob(resp)
 	if err != nil {
 		return nil, fmt.Errorf("http read body: %v", err)
@@ -62,7 +62,7 @@ func getMetrics(url string) (*statistics.Statistics, error) {
 	return s, nil
 }
 
-func scrapeUrlsEvery(urlsToScrape string, scrapeEvery time.Duration, stats *statistics.Statistics) {
+func scrapeUrlsEvery(urlsToScrape string, scrapeEvery time.Duration, stats *metrics.Metrics) {
 	if len(urlsToScrape) == 0 {
 		return
 	}
@@ -73,8 +73,8 @@ func scrapeUrlsEvery(urlsToScrape string, scrapeEvery time.Duration, stats *stat
 	}
 }
 
-func scrapeUrls(urls []string, stats *statistics.Statistics) {
-	ch := make(chan *statistics.Statistics)
+func scrapeUrls(urls []string, stats *metrics.Metrics) {
+	ch := make(chan *metrics.Metrics)
 	for _, url := range urls {
 		go func(url string) {
 			log.Printf("get: %v", url)
@@ -91,7 +91,7 @@ func scrapeUrls(urls []string, stats *statistics.Statistics) {
 			if stats == nil {
 				stats = s
 			} else {
-				stats.AddStatistics(s)
+				stats.AddMetrics(s)
 			}
 		}
 	}
