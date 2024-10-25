@@ -88,11 +88,11 @@ func (m *Metrics) Add(name string, labelName string, labelValue string, duration
 	}
 }
 
-func (m *Metrics) Write(writer *http.ResponseWriter) {
+func (m *Metrics) Write(writer http.ResponseWriter) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	(*writer).Header().Set("Content-Encoding", "gzip")
-	gw := gzip.NewWriter((*writer))
+	writer.Header().Set("Content-Encoding", "gzip")
+	gw := gzip.NewWriter(writer)
 	defer gw.Close()
 	names := make([]string, 0, len(m.Names))
 	for name := range m.Names {
@@ -178,13 +178,13 @@ func (m *Metrics) AddMetrics(s2 *Metrics) {
 	}
 }
 
-func (m *Metrics) WriteGob(writer *http.ResponseWriter) error {
+func (m *Metrics) WriteGob(writer http.ResponseWriter) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	return gob.NewEncoder((*writer)).Encode(m)
+	return gob.NewEncoder(writer).Encode(m)
 }
 
-func (m *Metrics) ReadGob(resp *http.Response) error {
+func (m *Metrics) ReadGob(resp http.Response) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	return gob.NewDecoder(resp.Body).Decode(m)
