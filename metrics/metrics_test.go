@@ -78,7 +78,7 @@ func TestAddMetrics(t *testing.T) {
 	}
 }
 
-// TestAddParallel increments a value 1M times and checks that the value is stored.
+// TestAddParallel adds a value 10k times and checks that the value is stored.
 func TestAddParallel(t *testing.T) {
 	stats := New()
 	var wg sync.WaitGroup
@@ -108,7 +108,7 @@ func TestAddParallel(t *testing.T) {
 	}
 }
 
-// TestIncParallel increments a value 1M times and checks that the value is stored.
+// TestIncParallel increments a value 10k times and checks that the value is stored.
 func TestIncParallel(t *testing.T) {
 	stats := New()
 	var wg sync.WaitGroup
