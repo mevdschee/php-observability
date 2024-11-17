@@ -47,9 +47,9 @@ func NewWithBuckets(buckets []float64) *Metrics {
 }
 
 func (m *Metrics) Inc(name string, labelName string, labelValue string, delta uint64) {
+	key := name + "|" + labelName
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	key := name + "|" + labelName
 	ms, exists := m.Names[key]
 	if !exists {
 		ms = MetricSet{
@@ -64,9 +64,9 @@ func (m *Metrics) Inc(name string, labelName string, labelValue string, delta ui
 }
 
 func (m *Metrics) Add(name string, labelName string, labelValue string, duration float64) {
+	key := name + "|" + labelName
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	key := name + "|" + labelName
 	ms, exists := m.Names[key]
 	if !exists {
 		ms = MetricSet{
@@ -89,11 +89,11 @@ func (m *Metrics) Add(name string, labelName string, labelValue string, duration
 }
 
 func (m *Metrics) Write(writer http.ResponseWriter) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
 	writer.Header().Set("Content-Encoding", "gzip")
 	gw := gzip.NewWriter(writer)
 	defer gw.Close()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	names := make([]string, 0, len(m.Names))
 	for name := range m.Names {
 		names = append(names, name)
